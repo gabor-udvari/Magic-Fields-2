@@ -576,3 +576,98 @@ function _processed_params($params = array()){
 
   return $field_param;
 }
+
+function mf_get_form($posttype, $postid=NULL){
+	global $post, $mf_domain, $mf_post_values;
+
+	if (!current_user_can('edit_posts')) {
+		_e('You don’t have the required permissions to edit the page/post.');
+		return;
+	}
+
+	// load admin/mf_post.php by hand
+	require_once 'admin/mf_post.php';
+
+	// create a new post object
+	$_GET['post_type'] = $posttype; // @todo refactoring or some other proper solution needed to solve this
+	$p = new mf_post();
+
+	// load the existing post
+	$posttitle = '';
+	$post = get_post($postid);
+	if(is_object($post)){
+		$posttitle = $post->post_title;
+    		$mf_post_values = $p->mf_get_post_values($postid);
+	}
+
+	// load js and css
+	wp_enqueue_script( 'jquery' ); // @todo quickfix for proper loading order
+	$p->load_js_css_base();
+	$p->load_js_css_fields();
+
+	// start the form
+	echo '<form name="post" action="" method="post" id="post">';
+
+	echo '<input type="hidden" name="mf-frontend-form" value="true">'; // the mf frontend handling looks for this
+
+	echo '<input type="hidden" name="post-type" value="'.$posttype.'">'; // the post type
+	echo '<input type="hidden" name="post-id" value="'.$postid.'">'; // the post id
+
+	echo '<label for="post-title"><span class="name">Title</span></label>';
+	echo '<div class="clear"></div>';
+	echo '<input id="post-title" name="post-title" class="mf-title" value="'.$posttitle.'"><br>';
+	echo '<div class="clear"></div>';
+
+      	// getting the groups (each group is a metabox)
+	$groups = $p->get_groups_by_post_type($posttype);
+      	foreach( $groups as $group ) {
+		// fill in the metaboxes
+		$p->mf_metabox_content($p, array( 'args' => array('group_info' => $group)));
+	}
+
+	// button for saving the post
+	echo '<p class="submit"><input type="submit" name="save" id="save" class="button" value="'. __('Save'). '"  /></p>';
+
+	// end of form
+	echo '</form>';
+}
+
+// add post handling function for front end form function
+add_action('init', 'mf_handle_form');
+function mf_handle_form(){
+	if( !isset($_POST) || empty($_POST) || !isset($_POST['mf-frontend-form'])){
+		// if there's no post data to handle exit the function
+		return;
+	}
+
+	/*
+	echo '<pre>';
+	print_r($_POST);
+	echo '</pre>';
+	*/
+
+	// user id
+	$current_user = wp_get_current_user();
+
+	// Create post object
+	$my_post = array(
+		'ID' => $_POST['post-id'],
+		'post_title' => $_POST['post-title'],
+		'post_content' => '',
+		'post_status' => 'publish',
+		'post_author' => $current_user->ID,
+		'post_type' => $_POST['post-type'],
+		//'post_category' => array(8,39)
+
+		// the magic fields elements will be included anyway since they are in the $_POST
+	);
+
+	// Insert the post into the database
+	$pid = wp_insert_post( $my_post );
+
+	// redirect on the new post on save
+	//$link = get_permalink( $pid );
+	$link = '.';
+	wp_safe_redirect( $link );
+	exit(); // don't do anything after redirect
+}

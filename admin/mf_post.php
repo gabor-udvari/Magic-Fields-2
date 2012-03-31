@@ -19,7 +19,7 @@ class mf_post extends mf_admin {
    */
   function mf_post_add_metaboxes() {
     global $post,$mf_post_values;
-  
+
     //if the user are going to add a new link 
     //the var $post is not defined and we do nothing
     if(!isset($post)) {
@@ -77,7 +77,7 @@ class mf_post extends mf_admin {
         } else {
           $repeated_groups = 1;
         }
-
+	
         for( $group_index = 1; $group_index <= $repeated_groups; $group_index++ ){
           $only = ($repeated_groups == 1)? TRUE : FALSE;
           $this->mf_draw_group($metabox,$extraclass,$group_index,$custom_fields,$mf_post_values,$only);
@@ -360,7 +360,7 @@ class mf_post extends mf_admin {
     global $mf_domain;
 
     wp_enqueue_style( 'mf_field_base', MF_BASENAME.'css/mf_field_base.css' );
-    wp_enqueue_script( 'tmpl', MF_BASENAME.'js/third_party/jquery.tmpl.js');       
+    wp_enqueue_script( 'tmpl', MF_BASENAME.'js/third_party/jquery.tmpl.js');
     wp_enqueue_script( 'mf_field_base', MF_BASENAME.'js/mf_field_base.js'); 
     wp_enqueue_script( 'mf_sortable_groups', MF_BASENAME.'js/mf_sortable_groups.js', array( 'jquery-ui-sortable' ) );
 
@@ -394,8 +394,13 @@ class mf_post extends mf_admin {
       wp_enqueue_script('media-upload');
       wp_enqueue_script('editor'); // load admin/mf_editor.js (switchEditor)
       mf_autoload('mf_tiny_mce'); // load admin/mf_tiny_mce.php (tinyMCE)
-      add_action( 'admin_print_footer_scripts', 'mf_tiny_mce', 25 ); // embed tinyMCE
-      add_action( 'admin_print_footer_scripts', array($this, 'media_buttons_add_mf'), 51 );
+      if(is_admin()){
+        add_action( 'admin_print_footer_scripts', 'mf_tiny_mce', 25 ); // embed tinyMCE
+      	add_action( 'admin_print_footer_scripts', array($this, 'media_buttons_add_mf'), 51 );
+      }else{
+        add_action( 'print_footer_scripts', 'mf_tiny_mce', 25 ); // embed tinyMCE
+      	add_action( 'print_footer_scripts', array($this, 'media_buttons_add_mf'), 51 );
+      }
     }
 
     foreach($fields as $field) {
