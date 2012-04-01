@@ -578,7 +578,7 @@ function _processed_params($params = array()){
 }
 
 function mf_get_form($posttype, $postid=NULL){
-	global $post, $mf_domain, $mf_post_values;
+	global $mf_domain, $mf_post_values;
 
 	if (!current_user_can('edit_posts')) {
 		_e('You don’t have the required permissions to edit the page/post.');
@@ -594,16 +594,31 @@ function mf_get_form($posttype, $postid=NULL){
 
 	// load the existing post
 	$posttitle = '';
-	$post = get_post($postid);
-	if(is_object($post)){
-		$posttitle = $post->post_title;
+	$ep = get_post($postid);
+	if(is_object($ep) && !is_null($postid)){
+		$posttitle = $ep->post_title;
     		$mf_post_values = $p->mf_get_post_values($postid);
 	}
 
 	// load js and css
 	wp_enqueue_script( 'jquery' ); // @todo quickfix for proper loading order
+	wp_enqueue_script( 'jquery.validate',MF_BASENAME.'js/third_party/jquery.validate.min.js', array( 'jquery' ) );
+	wp_enqueue_script( 'jquery.metadata',MF_BASENAME.'js/third_party/jquery.metadata.js', array( 'jquery' ) );
+	wp_enqueue_script( 'mf_admin',MF_BASENAME.'js/mf_admin.js', array( 'jquery.validate', 'jquery.metadata', 'jquery' ) );
 	$p->load_js_css_base();
 	$p->load_js_css_fields();
+        $p->general_option_multiline();
+
+	// display the message
+	if(isset($_GET['mf_message'])){
+		switch($_GET['mf_message']){
+			case 'success':
+				echo '<div id="message" class="updated">
+					'.__('The post was saved successfully.').'
+				</div>';
+				break;
+		}
+	}
 
 	// start the form
 	echo '<form name="post" action="" method="post" id="post">';
@@ -615,14 +630,17 @@ function mf_get_form($posttype, $postid=NULL){
 
 	echo '<label for="post-title"><span class="name">Title</span></label>';
 	echo '<div class="clear"></div>';
-	echo '<input id="post-title" name="post-title" class="mf-title" value="'.$posttitle.'"><br>';
+	echo '<input id="post-title" name="post-title" class="mf-title" value="'.$posttitle.'" validate="required:true"><br>';
 	echo '<div class="clear"></div>';
 
       	// getting the groups (each group is a metabox)
 	$groups = $p->get_groups_by_post_type($posttype);
       	foreach( $groups as $group ) {
-		// fill in the metaboxes
+		// fill in the groups
+		echo '<div id="mf_'.$group['id'].'" class="postbox">';
+		echo '<h3 class="hndl"><span>'.$group['label'].'</span></h3>';
 		$p->mf_metabox_content($p, array( 'args' => array('group_info' => $group)));
+		echo '</div>';
 	}
 
 	// button for saving the post
@@ -640,21 +658,18 @@ function mf_handle_form(){
 		return;
 	}
 
-	/*
-	echo '<pre>';
-	print_r($_POST);
-	echo '</pre>';
-	*/
-
 	// user id
 	$current_user = wp_get_current_user();
+
+	$poststatus = 'publish';
+	if(!is_numeric($_POST['post-id'])) $poststatus = 'pending';
 
 	// Create post object
 	$my_post = array(
 		'ID' => $_POST['post-id'],
 		'post_title' => $_POST['post-title'],
 		'post_content' => '',
-		'post_status' => 'publish',
+		'post_status' => $poststatus,
 		'post_author' => $current_user->ID,
 		'post_type' => $_POST['post-type'],
 		//'post_category' => array(8,39)
@@ -667,7 +682,31 @@ function mf_handle_form(){
 
 	// redirect on the new post on save
 	//$link = get_permalink( $pid );
-	$link = '.';
+	$link = '?mf_message=success';
 	wp_safe_redirect( $link );
 	exit(); // don't do anything after redirect
+}
+
+// add addloadevent javascript to frontend (ajaxurl, etc)
+add_action('wp_head', mf_addLoadEvent);
+function mf_addLoadEvent (){
+	// @todo: this function is an ugly hack
+	global $current_user;
+
+	echo "
+	<script type=\"text/javascript\">
+		addLoadEvent = function(func){if(typeof jQuery!=\"undefined\")jQuery(document).ready(func);else if(typeof wpOnload!='function'){wpOnload=func;}else{var oldonload=wpOnload;wpOnload=function(){oldonload();func();}}};
+		var userSettings = {
+			'url': '".$_SERVER["REQUEST_URI"]."',
+			'uid': '".$current_user->ID."',
+			'time':'".time()."'
+		},
+		ajaxurl = 'http://wpclean.localhost/wp-admin/admin-ajax.php',
+		pagenow = 'dashboard',
+		typenow = '',
+		adminpage = 'index-php',
+		thousandsSeparator = ',',
+		decimalPoint = '.',
+		isRtl = 0;
+	</script>";
 }

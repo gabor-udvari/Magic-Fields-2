@@ -298,6 +298,25 @@ background-image: url(../images/mf-upload-error.png);
 div.audio_wrap{ height: 20px;}
 div.mf_message_error{ height:25px; padding-left: 6px; }
 
-/* clearing div */
+/* front-end styles */
 .clear {clear: both; float: none;}
-.mf-title {font-size: 1.2em; width: 100%}
+.mf-title {
+	font-size: 1.2em;
+	width: 100%;
+	margin-bottom: 1em;
+}
+.postbox {
+	background: #efefef;
+	border: 1px solid #ccc;
+	padding: 4px;
+	margin-bottom: 1em;
+}
+h3.hndl {
+	font-weight: bold;
+}
+#message {
+	display: block;
+	background: #cfc;
+	padding: 5px;
+	border: 2px solid #3c3;
+}
