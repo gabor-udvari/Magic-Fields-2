@@ -589,7 +589,7 @@ function mf_get_form($posttype, $postid=NULL){
 	require_once 'admin/mf_post.php';
 
 	// create a new post object
-	$_GET['post_type'] = $posttype; // @todo refactoring or some other proper solution needed to solve this
+	$_GET['post_type'] = $posttype; // setting posttype for the form, @todo refactoring or some other proper solution needed to solve this
 	$p = new mf_post();
 
 	// load the existing post
@@ -602,6 +602,7 @@ function mf_get_form($posttype, $postid=NULL){
 
 	// load js and css
 	wp_enqueue_script( 'jquery' ); // @todo quickfix for proper loading order
+	wp_enqueue_script( 'suggest' ); // for autocompletion (suggestion)
 	wp_enqueue_script( 'jquery.validate',MF_BASENAME.'js/third_party/jquery.validate.min.js', array( 'jquery' ) );
 	wp_enqueue_script( 'jquery.metadata',MF_BASENAME.'js/third_party/jquery.metadata.js', array( 'jquery' ) );
 	wp_enqueue_script( 'mf_admin',MF_BASENAME.'js/mf_admin.js', array( 'jquery.validate', 'jquery.metadata', 'jquery' ) );
@@ -619,6 +620,9 @@ function mf_get_form($posttype, $postid=NULL){
 				break;
 		}
 	}
+
+	// loading the settings of the post type
+	$pt = mf_posttype::get_post_type($posttype);
 
 	// start the form
 	echo '<form name="post" action="" method="post" id="post">';
@@ -643,6 +647,44 @@ function mf_get_form($posttype, $postid=NULL){
 		echo '</div>';
 	}
 
+	
+	// checking if tags are enabled
+	if( array_key_exists('post_tag', $pt['taxonomy']) ){
+		// get the tags of the post (this is supposed to be inside The Loop, but it works)
+		$posttags = '';
+		$tags = get_the_tags($postid);
+		if ($tags) {
+			foreach($tags as $tag) {
+				$posttags .= $tag->name . ', '; 
+			}
+			$posttags = substr($posttags, 0, -2); // cut off the last comma
+		}
+
+		echo '<label for="post-tags"><span class="name">Tags</span></label><br>';
+		echo '<input id="post-tags" name="post-tags" value="'.$posttags.'" class="mf-tags" /><br>';
+		echo '<p class="howto">Separate tags with commas</p>';
+	}
+
+	// checking if categories are enabled
+	if( array_key_exists('category', $pt['taxonomy']) ){
+		echo '<label for="post-categories"><span class="name">Categories</span></label><br>';
+		
+		// listing all the categories
+		$categories = get_categories();
+		$p_categories = get_the_category($postid);
+		foreach($categories as $c){
+			$checked = '';
+			foreach($p_categories as $pc){
+				if($c->term_id == $pc->term_id){
+					// if the post has the listed category
+					$checked = 'checked="checked"';
+					break;
+				}
+			}
+			echo '<input type="checkbox" name="post-categories['.$c->term_id.']" '.$checked.'>'.$c->name.'<br>';
+		}
+	}
+
 	// button for saving the post
 	echo '<p class="submit"><input type="submit" name="save" id="save" class="button" value="'. __('Save'). '"  /></p>';
 
@@ -664,6 +706,9 @@ function mf_handle_form(){
 	$poststatus = 'publish';
 	if(!is_numeric($_POST['post-id'])) $poststatus = 'pending';
 
+	//print_r(array_keys($_POST['post-categories']));
+	//die();
+
 	// Create post object
 	$my_post = array(
 		'ID' => $_POST['post-id'],
@@ -672,14 +717,15 @@ function mf_handle_form(){
 		'post_status' => $poststatus,
 		'post_author' => $current_user->ID,
 		'post_type' => $_POST['post-type'],
-		//'post_category' => array(8,39)
+		'post_category' => array_keys($_POST['post-categories']),
+		'tags_input' => $_POST['post-tags'],
 
 		// the magic fields elements will be included anyway since they are in the $_POST
 	);
 
 	// Insert the post into the database
 	$pid = wp_insert_post( $my_post );
-
+	
 	// redirect on the new post on save
 	//$link = get_permalink( $pid );
 	$link = '?mf_message=success';
@@ -701,7 +747,7 @@ function mf_addLoadEvent (){
 			'uid': '".$current_user->ID."',
 			'time':'".time()."'
 		},
-		ajaxurl = 'http://wpclean.localhost/wp-admin/admin-ajax.php',
+		ajaxurl = '".admin_url('admin-ajax.php')."',
 		pagenow = 'dashboard',
 		typenow = '',
 		adminpage = 'index-php',

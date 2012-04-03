@@ -305,6 +305,9 @@ div.mf_message_error{ height:25px; padding-left: 6px; }
 	width: 100%;
 	margin-bottom: 1em;
 }
+.mf-tags {
+	width: 100%;
+}
 .postbox {
 	background: #efefef;
 	border: 1px solid #ccc;
@@ -319,4 +322,8 @@ h3.hndl {
 	background: #cfc;
 	padding: 5px;
 	border: 2px solid #3c3;
+}
+.howto {
+	font-size: 0.875em;
+	font-style: italic;
 }
