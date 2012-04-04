@@ -617,7 +617,7 @@ function mf_get_form($posttype, $postid=NULL){
 				echo '<div id="message" class="updated">
 					'.__('The post was saved successfully.').'
 				</div>';
-				break;
+			break;
 		}
 	}
 
@@ -632,10 +632,35 @@ function mf_get_form($posttype, $postid=NULL){
 	echo '<input type="hidden" name="post-type" value="'.$posttype.'">'; // the post type
 	echo '<input type="hidden" name="post-id" value="'.$postid.'">'; // the post id
 
+	// the title
 	echo '<label for="post-title"><span class="name">Title</span></label>';
 	echo '<div class="clear"></div>';
 	echo '<input id="post-title" name="post-title" class="mf-title" value="'.$posttitle.'" validate="required:true"><br>';
 	echo '<div class="clear"></div>';
+
+	// the editor (if it is supported)
+	if(post_type_supports($posttype, 'editor')){
+		// @todo refactoring, so javascript can be loaded more cleanly
+      		add_thickbox();
+		wp_enqueue_script('media-upload');
+		wp_enqueue_script('editor'); // load admin/mf_editor.js (switchEditor)
+		mf_autoload('mf_tiny_mce'); // load admin/mf_tiny_mce.php (tinyMCE)
+		add_action( 'print_footer_scripts', 'mf_tiny_mce', 25 ); // embed tinyMCE
+		add_action( 'print_footer_scripts', array($p, 'media_buttons_add_mf'), 51 );
+		
+		//echo plugins_url('magic-fields-2/field_types/multiline_field/multiline_field.js');
+		wp_enqueue_script( 'multiline_field', plugins_url('magic-fields-2/field_types/multiline_field/multiline_field.js') );
+     
+		/* 
+		$output .= sprintf('<div class="tab_multi_mf">');
+		$output .= sprintf('<a onclick="del_editor(\'%s\');" class="edButtonHTML_mf">HTML</a>',$field['input_id']);
+		$output .= sprintf('<a onclick="add_editor(\'%s\');" class="edButtonHTML_mf current" >Visual</a>',$field['input_id']);
+		$output .= sprintf('</div>');
+      		$output .= '<div class="clear"></div>'; // @todo ugly fix for front-end multiline textbox floating
+		*/
+		$output .= '<textarea id="post-content" class="mf_editor wp-editor theEditor" rows="15"></textarea>';
+		echo $output;
+	}
 
       	// getting the groups (each group is a metabox)
 	$groups = $p->get_groups_by_post_type($posttype);
@@ -647,9 +672,9 @@ function mf_get_form($posttype, $postid=NULL){
 		echo '</div>';
 	}
 
-	
-	// checking if tags are enabled
-	if( array_key_exists('post_tag', $pt['taxonomy']) ){
+	// checking if tags are enabled 
+	// @todo find a proper way to check with, something similar to post_type_supports
+	if( ( isset($pt['taxonomy']) && array_key_exists('post_tag', $pt['taxonomy']) ) || $posttype == 'post' ){
 		// get the tags of the post (this is supposed to be inside The Loop, but it works)
 		$posttags = '';
 		$tags = get_the_tags($postid);
@@ -666,7 +691,7 @@ function mf_get_form($posttype, $postid=NULL){
 	}
 
 	// checking if categories are enabled
-	if( array_key_exists('category', $pt['taxonomy']) ){
+	if( ( isset($pt['taxonomy']) && array_key_exists('category', $pt['taxonomy']) ) || $posttype == 'post' ){
 		echo '<label for="post-categories"><span class="name">Categories</span></label><br>';
 		
 		// listing all the categories
