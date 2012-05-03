@@ -3,8 +3,10 @@ global $wpdb,$blog_id;
 
 //useful for get quickly the path for  images/javascript files and css files
 //return something like: http://wordpress.local/wp-content/plugins/Magic-Fields/
-define('MF_BASENAME',plugins_url().'/'.str_replace(basename(__FILE__),"",plugin_basename(__FILE__)));
-define('MF_URL',MF_BASENAME);
+define('MF_BASENAME', plugins_url().'/'.str_replace(basename(__FILE__),"",plugin_basename(__FILE__)));
+define('MF_URL', home_url( '/wp-content/plugins/' ).str_replace(basename(__FILE__),"",plugin_basename(__FILE__)));
+
+define('MF_DOMAIN', preg_replace("/^(.*?)\.(.*?\..*)$/","$2", $_SERVER['SERVER_NAME'])); // strip subdomains
 
 //return something like: /Users/user/sites/wordpres/wp-content/plugins/Magic-Fields
 define("MF_PATH", dirname(__FILE__));

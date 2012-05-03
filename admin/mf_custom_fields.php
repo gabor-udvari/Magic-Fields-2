@@ -641,9 +641,15 @@ class mf_custom_fields extends mf_admin {
   }
 
   public function upload($custom_field_id, $type = 'image',$callback = 'mf_callback_upload'){
-    $iframe_src = sprintf('%sadmin/mf_upload.php?input_name=%s&callback=%s&type=%s',MF_BASENAME,$custom_field_id,$callback,$type);
-    $out = sprintf('<iframe id="iframe_upload_%s" src="%s" height="45" scrolling="no" ></iframe>',$custom_field_id,$iframe_src);
-    
+    /*
+    $folder = dirname($_SERVER['PHP_SELF']);
+    if(substr($folder, -1) == '/') $folder = substr($folder, 0, -1); // remove ending slash
+    $url = preg_replace('/(?<=:\/\/).*?\/.*?\//', $_SERVER['SERVER_NAME'].$folder.'/', MF_URL); // replace server name
+    */
+    $url = MF_URL; // replace server name
+    $iframe_src = sprintf('%sadmin/mf_upload.php?input_name=%s&callback=%s&type=%s', $url, $custom_field_id, $callback, $type);
+    $out = sprintf('<iframe id="iframe_upload_%s" src="%s" height="45" scrolling="no" frameborder="0"></iframe>',$custom_field_id,$iframe_src);
+
     return $out;
   }
 }

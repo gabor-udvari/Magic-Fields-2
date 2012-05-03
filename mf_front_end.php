@@ -763,8 +763,11 @@ add_action('wp_head', mf_addLoadEvent);
 function mf_addLoadEvent (){
 	// @todo: this function is an ugly hack
 	global $current_user;
-
+	
 	echo "
+	<script type=\"text/javascript\">
+		document.domain = '".MF_DOMAIN."';
+	</script>
 	<script type=\"text/javascript\">
 		addLoadEvent = function(func){if(typeof jQuery!=\"undefined\")jQuery(document).ready(func);else if(typeof wpOnload!='function'){wpOnload=func;}else{var oldonload=wpOnload;wpOnload=function(){oldonload();func();}}};
 		var userSettings = {

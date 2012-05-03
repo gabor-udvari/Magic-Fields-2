@@ -102,6 +102,7 @@ if( isset($_POST['fileframe']) ){
 ?>
 
   <script type="text/javascript" charset="utf-8">
+    document.domain = '<?php print MF_DOMAIN; ?>';
     var mf_par = window.parent;
     var mf_js = <?php echo json_encode($resp); ?>;
     mf_par.<?php echo $_POST['callback']; ?>(mf_js);
@@ -125,7 +126,7 @@ foreach($admin_css as $c){
 <style>
   body { padding: 0px; margin: 0px; vertical-align:top; background: transparent;}
 
-input.mf-file { background: #f8f8f8;}
+input.mf-file { background: #f8f8f8; border: 1px #ccc solid; margin: 2px; padding: 2px; }
 label.label-file { font-size: 12px; padding-left: 2px; }
 </style>
 
@@ -136,6 +137,7 @@ label.label-file { font-size: 12px; padding-left: 2px; }
 <script language="javascript">
 function upload(){
   // hide old iframe
+  document.domain = '<?php print MF_DOMAIN; ?>';
   var par = window.parent.document;
   var iframe = par.getElementById('iframe_upload_<?php echo $_GET["input_name"]?>');
   iframe.style.display="none";
