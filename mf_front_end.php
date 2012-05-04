@@ -731,8 +731,8 @@ function mf_handle_form(){
 	$poststatus = 'publish';
 	if(!is_numeric($_POST['post-id'])) $poststatus = 'pending';
 
-	//print_r(array_keys($_POST['post-categories']));
-	//die();
+	// check if post-categories are empty
+	if(!is_array($_POST['post-categories'])) $_POST['post-categories'] = array();
 
 	// Create post object
 	$my_post = array(

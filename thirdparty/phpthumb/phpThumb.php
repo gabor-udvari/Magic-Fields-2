@@ -31,9 +31,11 @@ $default = array(
   'h'	=> 0,
   'src' => ''
 );
-				
+
 //getting the name of the image
-preg_match('/\/wp-content\/([0-9\_a-z\/\-\.]+\.(jpg|jpeg|png|gif))/i',$_GET['src'],$match);
+$dir = preg_quote(MF_FILES_URL, '/');
+$pattern = '/'.$dir.'([0-9\_a-z\/\-\.]+\.(jpg|jpeg|png|gif))/i';
+preg_match($pattern, $_GET['src'], $match);
 $image_name_clean = $match[1];
 $extension = $match[2];
 
@@ -43,9 +45,14 @@ if(isset($current_blog)){
 }
 //Getting the original size of the image
 if( preg_match('/'.MF_FILES_NAME.'/',$image_name_clean) ){
+  // needed for the upload function?
   $image_name_clean = preg_replace('/'.MF_FILES_NAME.'\//','',$image_name_clean);
   $file = MF_FILES_DIR.$image_name_clean;
+}else if(file_exists(MF_FILES_DIR.$image_name_clean)){
+  // needed for thumbnails
+  $file = MF_FILES_DIR.$image_name_clean;
 }else{
+  // defaults to wp_content
   $file = WP_CONTENT_DIR.DS.$image_name_clean;
 }
 
@@ -87,7 +94,7 @@ if(file_exists(MF_CACHE_DIR.$image_name)){
   fclose($handle);
 	
   header("Cache-Control: public"); 
-  header ("Content-type: image/".$extension); 
+  header("Content-type: image/".$extension); 
   header("Content-Disposition: inline; filename=\"".MF_CACHE_DIR.$image_name."\""); 
   header('Content-Length: ' . filesize(MF_CACHE_DIR.$image_name)); 
   echo $contents;
@@ -106,7 +113,7 @@ if(file_exists(MF_CACHE_DIR.$image_name)){
     fclose($handle);
     
     header("Cache-Control: public"); 
-    header ("Content-type: image/".$extension); 
+    header("Content-type: image/".$extension); 
     header("Content-Disposition: inline; filename=\"".$thumb_path."\""); 
     header('Content-Length: ' . filesize($thumb_path)); 
     echo $contents;

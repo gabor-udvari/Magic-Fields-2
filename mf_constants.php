@@ -16,6 +16,8 @@ define("PHPTHUMB",MF_URL."thirdparty/phpthumb/phpThumb.php");
 define('MF_FILES_NAME','files_mf');
 define('MF_CACHE_NAME','cache');
 
+$mf_ud = wp_upload_dir();
+
 if( mf_mu2() ){
   /* MU path /wp-content/blogs.dir/{id_blog}/files_mf */
   define('MF_FILES_DIR', WP_CONTENT_DIR.DS.'blogs.dir'.DS.$blog_id.DS.MF_FILES_NAME.DS);
@@ -25,8 +27,8 @@ if( mf_mu2() ){
   define('MF_CACHE_URL', MF_FILES_URL.MF_CACHE_NAME.'/');
 
 }else{
-  define('MF_FILES_DIR', WP_CONTENT_DIR.DS.MF_FILES_NAME.DS);
-  define('MF_FILES_URL', WP_CONTENT_URL.'/'.MF_FILES_NAME.'/');
+  define('MF_FILES_DIR', $mf_ud['path'].DS.MF_FILES_NAME.DS);
+  define('MF_FILES_URL', $mf_ud['url'].'/'.MF_FILES_NAME.'/');
 
   define('MF_CACHE_DIR', MF_FILES_DIR.MF_CACHE_NAME.DS);
   define('MF_CACHE_URL', MF_FILES_URL.MF_CACHE_NAME.'/');
