@@ -34,7 +34,8 @@ $default = array(
 
 //getting the name of the image
 $dir = preg_quote(MF_FILES_URL, '/');
-$pattern = '/'.$dir.'([0-9\_a-z\/\-\.]+\.(jpg|jpeg|png|gif))/i';
+//$pattern = '/'.$dir.'([0-9\_a-z\/\-\.]+\.(jpg|jpeg|png|gif))/i'; // old one based on MF_FILES_URL (wrong)
+$pattern = '/.*\/'.'([0-9\_a-z\/\-\.]+\.(jpg|jpeg|png|gif))/i';
 preg_match($pattern, $_GET['src'], $match);
 $image_name_clean = $match[1];
 $extension = $match[2];
@@ -43,7 +44,10 @@ $extension = $match[2];
 if(isset($current_blog)){
   $image_name_clean = preg_replace('/blogs.dir\/(\d+)\//','',$image_name_clean);
 }
+
+
 //Getting the original size of the image
+/*
 if( preg_match('/'.MF_FILES_NAME.'/',$image_name_clean) ){
   // needed for the upload function?
   $image_name_clean = preg_replace('/'.MF_FILES_NAME.'\//','',$image_name_clean);
@@ -55,6 +59,8 @@ if( preg_match('/'.MF_FILES_NAME.'/',$image_name_clean) ){
   // defaults to wp_content
   $file = WP_CONTENT_DIR.DS.$image_name_clean;
 }
+*/
+$file = ABSPATH . str_replace(get_site_url(), '', $_GET['src']);
 
 if(file_exists($file) && (empty($_GET['w']) || empty($_GET['h']))){
 	$size = @getimagesize($file);
@@ -101,9 +107,14 @@ if(file_exists(MF_CACHE_DIR.$image_name)){
 }else{
   //generating the image
   $thumb = new mfthumb();
+  //$file = '/2012/11/ibm.png';
   $thumb_path = $thumb->image_resize($file,$params['w'],$params['h'],$params['zc'],$params['far'],$params['iar'],MF_CACHE_DIR.$image_name);
   //Displaying the image
-  if(file_exists($thumb_path)){
+  if(is_wp_error($thumb_path)){
+    // error checking
+    // @todo: mfthumb only generates an image file, how do we display errors?
+  }else if(file_exists($thumb_path)){
+    // if no error and the image file exists, display the image
     $size = getimagesize($thumb_path);
     $handle = fopen($thumb_path, "rb");
     $contents = NULL;
