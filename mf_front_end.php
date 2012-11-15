@@ -763,7 +763,7 @@ function mf_handle_form(){
 }
 
 // add addloadevent javascript to frontend (ajaxurl, etc)
-add_action('wp_head', mf_addLoadEvent);
+add_action('wp_head', 'mf_addLoadEvent');
 function mf_addLoadEvent (){
 	// @todo: this function is an ugly hack
 	global $current_user;
