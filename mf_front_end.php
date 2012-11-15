@@ -127,7 +127,7 @@ function get_post_type_name($post_id = NULL){
   return $post_type;
 }
 
-function get_image ($field_name, $group_index=1, $field_index=1,$tag_img=1,$post_id=NULL,$params=NULL, $attr = NULL , $wp_size='original') {
+function get_image ($field_name, $group_index=1, $field_index=1, $tag_img=1, $post_id=NULL, $params=NULL, $attr = NULL, $wp_size='original') {
 
   return create_image(
     array(
@@ -294,10 +294,13 @@ function create_image($options){
   $field_param = $field['options'];
   
   $field_value = $field['meta_value'];
-
+    
   if($field_type == 'image_media'){
-    $data = wp_get_attachment_image_src($field_value, $wp_size);
-    $field_value = $data[0];
+    // @todo: wp_get_attachment_image_src will return an icon file representing a media type, not the uploaded image!
+    //$data = wp_get_attachment_image_src($field_value, $wp_size);
+    //$field_value = $data[0];
+    // this will return the proper url, and this can (and should) be changed with filters 
+    $field_value = mf_get_attachment_url( $field_value );
   }
 
   if(empty($field_value)) return "";
@@ -437,8 +440,7 @@ function aux_image($value,$params,$type = NULL){
     );
         
 	
-    if ( is_wp_error($thumb_path) )
-      return $thumb_path->get_error_message();
+    if ( is_wp_error($thumb_path) ) return $thumb_path->get_error_message();
     $value = $final_filename;
   }
   return $value;
@@ -489,8 +491,9 @@ function _processed_value($value, $type, $options = array(), $image_array = 0 ){
           unset($options['css_class']);
           $options = _processed_params($options);
           
-          $data = wp_get_attachment_image_src($value,'original');
-          $result['original'] = $data[0];
+          //$data = wp_get_attachment_image_src($value,'original');
+          //$result['original'] = $data[0];
+          $result['original'] = mf_get_attachment_url($value);
           if( empty($options) ){
             $result['thumb'] = $result['original'];
           }else{
@@ -499,8 +502,9 @@ function _processed_value($value, $type, $options = array(), $image_array = 0 ){
         }
       }else{
         if( !empty($value) ){
-          $data = wp_get_attachment_image_src($value,'original');
-          $result = $data[0];
+          //$data = wp_get_attachment_image_src($value,'original');
+          //$result = $data[0];
+          $result = mf_get_attachment_url($value);
         }
       }
       

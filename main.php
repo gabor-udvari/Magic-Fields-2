@@ -265,3 +265,24 @@ function mf_action_links($links, $file){
 	}
 	return $links;
 }
+
+/**
+ * Modify the wp_get_attachment_url
+ * 
+ * This is not extending wp_get_attachment_url as a filter,
+ * but it is a replacement for it.
+ */
+function mf_get_attachment_url($attachment_id){
+	global $wpdb;
+
+	// this will be returned
+	$url = '';
+	$mf_orig_attachment_url = false;
+	if($mf_orig_attachment_url){
+		// if the original wp function should be used:
+		$url = wp_get_attachment_url($attachment_id);
+	}else{
+		$url = $wpdb->get_var('SELECT guid FROM '.$wpdb->posts.' WHERE ID='.$attachment_id.' LIMIT 1');
+	}
+	return $url;
+}
